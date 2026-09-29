@@ -16,14 +16,20 @@ namespace TaskManagerApi.Controllers
             _context = context;
         }
 
+        /// <summary>Gets all tasks with their category.</summary>
         [HttpGet]
+        [ProducesResponseType<List<TaskItem>>(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAll()
         {
             var tasks = await _context.Tasks.Include(t => t.Category).ToListAsync();
             return Ok(tasks);
         }
 
+        /// <summary>Gets one task with its category.</summary>
+        /// <param name="id">The task id.</param>
         [HttpGet("{id}")]
+        [ProducesResponseType<TaskItem>(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById(int id)
         {
             var task = await _context.Tasks
@@ -33,7 +39,11 @@ namespace TaskManagerApi.Controllers
             return Ok(task);
         }
 
+        /// <summary>Creates a new task, optionally in a category.</summary>
+        /// <response code="400">The title is missing or categoryId does not exist.</response>
         [HttpPost]
+        [ProducesResponseType<TaskItem>(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Create([FromBody] TaskItem newTask)
         {
             if (!await CategoryExists(newTask.CategoryId))
@@ -44,7 +54,14 @@ namespace TaskManagerApi.Controllers
             return CreatedAtAction(nameof(GetById), new { id = newTask.Id }, newTask);
         }
 
+        /// <summary>Updates a task. Marking it completed sends an email notification.</summary>
+        /// <param name="id">The task id.</param>
+        /// <param name="updatedTask">The new values for the task.</param>
+        /// <response code="400">The title is missing or categoryId does not exist.</response>
         [HttpPut("{id}")]
+        [ProducesResponseType<TaskItem>(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Update(int id, [FromBody] TaskItem updatedTask)
         {
             var task = await _context.Tasks.FindAsync(id);
@@ -71,7 +88,11 @@ namespace TaskManagerApi.Controllers
             return Ok(task);
         }
 
+        /// <summary>Deletes a task.</summary>
+        /// <param name="id">The task id.</param>
         [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Delete(int id)
         {
             var task = await _context.Tasks.FindAsync(id);

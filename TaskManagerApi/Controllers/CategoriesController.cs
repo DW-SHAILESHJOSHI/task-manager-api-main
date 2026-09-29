@@ -52,5 +52,20 @@ namespace TaskManagerApi.Controllers
             await _context.SaveChangesAsync();
             return Ok(category);
         }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            // Load the category's tasks so EF Core sets their CategoryId to null
+            // instead of the database rejecting the delete on the foreign key.
+            var category = await _context.Categories
+                .Include(c => c.Tasks)
+                .FirstOrDefaultAsync(c => c.Id == id);
+            if (category == null) return NotFound();
+
+            _context.Categories.Remove(category);
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
     }
 }

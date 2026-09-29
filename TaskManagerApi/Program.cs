@@ -22,6 +22,12 @@ if (app.Environment.IsDevelopment())
 {
     // Serves the document at /openapi/v1.json
     app.MapOpenApi();
+
+    // Interactive Swagger UI at /swagger, built from the document above.
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/openapi/v1.json", "Task Manager API v1");
+    });
 }
 
 app.UseHttpsRedirection();

@@ -23,12 +23,22 @@ namespace TaskManagerApi.Controllers
             return Ok(categories);
         }
 
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var category = await _context.Categories
+                .Include(c => c.Tasks)
+                .FirstOrDefaultAsync(c => c.Id == id);
+            if (category == null) return NotFound();
+            return Ok(category);
+        }
+
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] Category newCategory)
         {
             _context.Categories.Add(newCategory);
             await _context.SaveChangesAsync();
-            return Ok(newCategory);
+            return CreatedAtAction(nameof(GetById), new { id = newCategory.Id }, newCategory);
         }
     }
 }

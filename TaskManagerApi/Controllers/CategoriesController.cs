@@ -40,5 +40,17 @@ namespace TaskManagerApi.Controllers
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetById), new { id = newCategory.Id }, newCategory);
         }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] Category updatedCategory)
+        {
+            var category = await _context.Categories.FindAsync(id);
+            if (category == null) return NotFound();
+
+            category.Name = updatedCategory.Name;
+
+            await _context.SaveChangesAsync();
+            return Ok(category);
+        }
     }
 }

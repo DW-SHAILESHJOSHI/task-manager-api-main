@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TaskManagerApi.Models;
 using TaskManagerApi.Data;
+using TaskManagerApi.Dtos;
 
 namespace TaskManagerApi.Controllers
 {
@@ -43,8 +44,9 @@ namespace TaskManagerApi.Controllers
         [HttpPost]
         [ProducesResponseType<Category>(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Create([FromBody] Category newCategory)
+        public async Task<IActionResult> Create([FromBody] CategoryRequest request)
         {
+            var newCategory = new Category { Name = request.Name };
             _context.Categories.Add(newCategory);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetById), new { id = newCategory.Id }, newCategory);
@@ -52,17 +54,17 @@ namespace TaskManagerApi.Controllers
 
         /// <summary>Renames an existing category.</summary>
         /// <param name="id">The category id.</param>
-        /// <param name="updatedCategory">The new category name.</param>
+        /// <param name="request">The new category name.</param>
         [HttpPut("{id}")]
         [ProducesResponseType<Category>(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Update(int id, [FromBody] Category updatedCategory)
+        public async Task<IActionResult> Update(int id, [FromBody] CategoryRequest request)
         {
             var category = await _context.Categories.FindAsync(id);
             if (category == null) return NotFound();
 
-            category.Name = updatedCategory.Name;
+            category.Name = request.Name;
 
             await _context.SaveChangesAsync();
             return Ok(category);

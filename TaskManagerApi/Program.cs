@@ -39,3 +39,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Makes the generated Program class visible to WebApplicationFactory in TaskManagerApi.Tests.
+public partial class Program { }

@@ -35,6 +35,6 @@ namespace TaskManagerApi.Dtos
         public int Id { get; set; }
         public required string Title { get; set; }
         public bool IsCompleted { get; set; }
-        public string Priority { get; set; } = "Low";
+        public Priority Priority { get; set; }
     }
 }

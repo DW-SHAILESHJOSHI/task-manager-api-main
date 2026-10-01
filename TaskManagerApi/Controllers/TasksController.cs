@@ -17,25 +17,26 @@ namespace TaskManagerApi.Controllers
             _context = context;
         }
 
-        /// <summary>Gets all tasks with their category.</summary>
+        /// <summary>Gets all tasks with their category name.</summary>
         [HttpGet]
-        [ProducesResponseType<List<TaskItem>>(StatusCodes.Status200OK)]
+        [ProducesResponseType<List<TaskResponse>>(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAll()
         {
-            var tasks = await _context.Tasks.Include(t => t.Category).ToListAsync();
+            var tasks = await _context.Tasks
+                .OrderBy(t => t.Id)
+                .Select(TaskResponse.Projection)
+                .ToListAsync();
             return Ok(tasks);
         }
 
-        /// <summary>Gets one task with its category.</summary>
+        /// <summary>Gets one task with its category name.</summary>
         /// <param name="id">The task id.</param>
         [HttpGet("{id}")]
-        [ProducesResponseType<TaskItem>(StatusCodes.Status200OK)]
+        [ProducesResponseType<TaskResponse>(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById(int id)
         {
-            var task = await _context.Tasks
-                .Include(t => t.Category)
-                .FirstOrDefaultAsync(t => t.Id == id);
+            var task = await FindResponse(id);
             if (task == null) return NotFound();
             return Ok(task);
         }
@@ -43,7 +44,7 @@ namespace TaskManagerApi.Controllers
         /// <summary>Creates a new task, optionally in a category.</summary>
         /// <response code="400">The title is missing or categoryId does not exist.</response>
         [HttpPost]
-        [ProducesResponseType<TaskItem>(StatusCodes.Status201Created)]
+        [ProducesResponseType<TaskResponse>(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Create([FromBody] TaskRequest request)
         {
@@ -59,7 +60,7 @@ namespace TaskManagerApi.Controllers
             };
             _context.Tasks.Add(newTask);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetById), new { id = newTask.Id }, newTask);
+            return CreatedAtAction(nameof(GetById), new { id = newTask.Id }, await FindResponse(newTask.Id));
         }
 
         /// <summary>Updates a task. Marking it completed sends an email notification.</summary>
@@ -67,7 +68,7 @@ namespace TaskManagerApi.Controllers
         /// <param name="request">The new values for the task.</param>
         /// <response code="400">The title is missing or categoryId does not exist.</response>
         [HttpPut("{id}")]
-        [ProducesResponseType<TaskItem>(StatusCodes.Status200OK)]
+        [ProducesResponseType<TaskResponse>(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Update(int id, [FromBody] TaskRequest request)
@@ -93,7 +94,7 @@ namespace TaskManagerApi.Controllers
                 notification.SendReminder(task.Title);
             }
 
-            return Ok(task);
+            return Ok(await FindResponse(task.Id));
         }
 
         /// <summary>Deletes a task.</summary>
@@ -109,6 +110,14 @@ namespace TaskManagerApi.Controllers
             _context.Tasks.Remove(task);
             await _context.SaveChangesAsync();
             return NoContent();
+        }
+
+        private Task<TaskResponse?> FindResponse(int id)
+        {
+            return _context.Tasks
+                .Where(t => t.Id == id)
+                .Select(TaskResponse.Projection)
+                .FirstOrDefaultAsync();
         }
 
         // A task without a category is allowed; only reject ids that don't exist.

@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Task Manager</title>
+  <meta name="description" content="Manage tasks and categories backed by the Task Manager API.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11.5' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/app.css">
+  <script>
+    // Apply the saved theme before first paint so the page doesn't flash.
+    try { const t = localStorage.getItem('tm-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}
+  </script>
+</head>
+<body>
+  <!-- SVG icon sprite, referenced with <use href="#i-name"> -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z M13.5 6.5l4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M5.5 7l1 12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2l1-12M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 16l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M3 13l2.5-7.5A2 2 0 0 1 7.4 4h9.2a2 2 0 0 1 1.9 1.5L21 13v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5zM3 13h5l1.5 2.5h5L16 13h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v4.5h-4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </svg>
+
+  <div class="app">
+    <div class="scrim" id="scrim" hidden></div>
+
+    <!-- Sidebar: views and categories -->
+    <aside class="sidebar" id="sidebar" aria-label="Navigation">
+      <div class="brand">
+        <span class="brand-mark"><svg><use href="#i-check"/></svg></span>
+        <span class="brand-name">Task Manager</span>
+        <button class="icon-btn sidebar-close" id="sidebarClose" type="button" aria-label="Close menu"><svg><use href="#i-x"/></svg></button>
+      </div>
+
+      <nav class="nav">
+        <p class="nav-label">Views</p>
+        <ul class="nav-list">
+          <li><button class="nav-item" type="button" data-view="all"><svg><use href="#i-layers"/></svg><span class="nav-text">All tasks</span><span class="nav-count" id="countAll">0</span></button></li>
+          <li><button class="nav-item" type="button" data-view="none"><svg><use href="#i-inbox"/></svg><span class="nav-text">Uncategorized</span><span class="nav-count" id="countNone">0</span></button></li>
+        </ul>
+
+        <div class="nav-label-row">
+          <p class="nav-label">Categories</p>
+          <button class="icon-btn icon-btn-sm" id="addCategoryBtn" type="button" aria-label="Add category" title="Add category"><svg><use href="#i-plus"/></svg></button>
+        </div>
+        <ul class="nav-list" id="categoryList"></ul>
+        <p class="nav-empty" id="categoryEmpty" hidden>No categories yet.</p>
+      </nav>
+
+      <div class="sidebar-footer">
+        <span class="api-status" id="apiStatus" data-state="loading"><span class="dot"></span><span class="api-status-text">Connecting…</span></span>
+        <a class="footer-link" href="swagger" target="_blank" rel="noopener">API docs <svg><use href="#i-external"/></svg></a>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+      <header class="topbar">
+        <button class="icon-btn menu-btn" id="menuBtn" type="button" aria-label="Open menu"><svg><use href="#i-menu"/></svg></button>
+        <div class="topbar-title">
+          <h1 id="viewTitle">All tasks</h1>
+          <p id="viewSubtitle">Everything across your categories</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="icon-btn" id="refreshBtn" type="button" aria-label="Refresh" title="Refresh"><svg><use href="#i-refresh"/></svg></button>
+          <button class="icon-btn" id="themeBtn" type="button" aria-label="Toggle dark mode" title="Toggle dark mode"><svg class="theme-icon-dark"><use href="#i-moon"/></svg><svg class="theme-icon-light"><use href="#i-sun"/></svg></button>
+          <button class="btn btn-primary" id="newTaskBtn" type="button"><svg><use href="#i-plus"/></svg><span>New task</span></button>
+        </div>
+      </header>
+
+      <section class="stats" aria-label="Summary">
+        <div class="stat"><p class="stat-label">Total</p><p class="stat-value" id="statTotal">0</p></div>
+        <div class="stat"><p class="stat-label">In progress</p><p class="stat-value" id="statActive">0</p></div>
+        <div class="stat"><p class="stat-label">Completed</p><p class="stat-value" id="statDone">0</p></div>
+        <div class="stat">
+          <p class="stat-label">Progress</p>
+          <p class="stat-value" id="statPct">0%</p>
+          <div class="progress" aria-hidden="true"><div class="progress-bar" id="statBar"></div></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="toolbar">
+          <label class="search">
+            <svg><use href="#i-search"/></svg>
+            <input id="searchInput" type="search" placeholder="Search tasks…" aria-label="Search tasks" autocomplete="off">
+          </label>
+          <div class="segmented" role="group" aria-label="Filter by status" id="statusFilter">
+            <button type="button" data-status="all" aria-pressed="true">All</button>
+            <button type="button" data-status="active" aria-pressed="false">Active</button>
+            <button type="button" data-status="done" aria-pressed="false">Done</button>
+          </div>
+          <select id="priorityFilter" class="select" aria-label="Filter by priority">
+            <option value="all">All priorities</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+          <select id="sortSelect" class="select" aria-label="Sort tasks">
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="priority">Priority</option>
+            <option value="title">Title A–Z</option>
+          </select>
+        </div>
+
+        <ul class="task-list" id="taskList" aria-live="polite"></ul>
+
+        <div class="empty" id="emptyState" hidden>
+          <div class="empty-icon"><svg><use href="#i-inbox"/></svg></div>
+          <p class="empty-title" id="emptyTitle">No tasks yet</p>
+          <p class="empty-text" id="emptyText">Create your first task to get started.</p>
+          <button class="btn btn-secondary" id="emptyAction" type="button"></button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Create / edit task -->
+  <dialog class="modal" id="taskDialog" aria-labelledby="taskDialogTitle">
+    <form id="taskForm" novalidate>
+      <div class="modal-head">
+        <h2 id="taskDialogTitle">New task</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Close"><svg><use href="#i-x"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label for="taskTitle">Title</label>
+          <input id="taskTitle" name="title" class="input" type="text" placeholder="What needs to be done?" autocomplete="off">
+          <p class="field-error" id="taskTitleError" hidden>Please enter a title.</p>
+        </div>
+        <div class="field">
+          <span class="field-label" id="priorityLabel">Priority</span>
+          <div class="priority-picker" role="radiogroup" aria-labelledby="priorityLabel">
+            <label class="priority-option" data-p="Low"><input type="radio" name="priority" value="Low" checked><span>Low</span></label>
+            <label class="priority-option" data-p="Medium"><input type="radio" name="priority" value="Medium"><span>Medium</span></label>
+            <label class="priority-option" data-p="High"><input type="radio" name="priority" value="High"><span>High</span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label for="taskCategory">Category</label>
+          <select id="taskCategory" name="categoryId" class="input"></select>
+        </div>
+        <label class="switch-row">
+          <span><span class="switch-title">Mark as completed</span><span class="switch-hint">Completing a task sends an email notification.</span></span>
+          <input id="taskCompleted" name="isCompleted" type="checkbox" class="switch">
+        </label>
+        <p class="form-error" id="taskFormError" hidden></p>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" type="button" data-close>Cancel</button>
+        <button class="btn btn-primary" type="submit" id="taskSubmit">Create task</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Create / rename category -->
+  <dialog class="modal modal-sm" id="categoryDialog" aria-labelledby="categoryDialogTitle">
+    <form id="categoryForm" novalidate>
+      <div class="modal-head">
+        <h2 id="categoryDialogTitle">New category</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Close"><svg><use href="#i-x"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label for="categoryName">Name</label>
+          <input id="categoryName" name="name" class="input" type="text" placeholder="e.g. Work" autocomplete="off">
+          <p class="field-error" id="categoryNameError" hidden>Please enter a name.</p>
+        </div>
+        <p class="form-error" id="categoryFormError" hidden></p>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" type="button" data-close>Cancel</button>
+        <button class="btn btn-primary" type="submit" id="categorySubmit">Create category</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Confirm destructive actions -->
+  <dialog class="modal modal-sm" id="confirmDialog" aria-labelledby="confirmTitle">
+    <div class="modal-head">
+      <h2 id="confirmTitle">Delete?</h2>
+    </div>
+    <div class="modal-body">
+      <p class="confirm-text" id="confirmText"></p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" type="button" data-close>Cancel</button>
+      <button class="btn btn-danger" type="button" id="confirmOk">Delete</button>
+    </div>
+  </dialog>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

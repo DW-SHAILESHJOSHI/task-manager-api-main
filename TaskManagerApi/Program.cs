@@ -13,7 +13,22 @@ builder.Services.AddControllers()
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Generates the OpenAPI (Swagger) document describing every endpoint.
+builder.Services.AddOpenApi();
+
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    // Serves the document at /openapi/v1.json
+    app.MapOpenApi();
+
+    // Interactive Swagger UI at /swagger, built from the document above.
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/openapi/v1.json", "Task Manager API v1");
+    });
+}
 
 app.UseHttpsRedirection();
 app.UseAuthorization();

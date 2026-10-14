@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TaskManagerApi.Models;
 using TaskManagerApi.Data;
+using TaskManagerApi.Dtos;
 
 namespace TaskManagerApi.Controllers
 {
@@ -16,14 +17,20 @@ namespace TaskManagerApi.Controllers
             _context = context;
         }
 
+        /// <summary>Gets all tasks with their category.</summary>
         [HttpGet]
+        [ProducesResponseType<List<TaskItem>>(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAll()
         {
             var tasks = await _context.Tasks.Include(t => t.Category).ToListAsync();
             return Ok(tasks);
         }
 
+        /// <summary>Gets one task with its category.</summary>
+        /// <param name="id">The task id.</param>
         [HttpGet("{id}")]
+        [ProducesResponseType<TaskItem>(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById(int id)
         {
             var task = await _context.Tasks
@@ -33,32 +40,50 @@ namespace TaskManagerApi.Controllers
             return Ok(task);
         }
 
+        /// <summary>Creates a new task, optionally in a category.</summary>
+        /// <response code="400">The title is missing or categoryId does not exist.</response>
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] TaskItem newTask)
+        [ProducesResponseType<TaskItem>(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Create([FromBody] TaskRequest request)
         {
-            if (!await CategoryExists(newTask.CategoryId))
-                return BadRequest($"Category {newTask.CategoryId} does not exist.");
+            if (!await CategoryExists(request.CategoryId))
+                return BadRequest($"Category {request.CategoryId} does not exist.");
 
+            var newTask = new TaskItem
+            {
+                Title = request.Title,
+                Priority = request.Priority,
+                IsCompleted = request.IsCompleted,
+                CategoryId = request.CategoryId
+            };
             _context.Tasks.Add(newTask);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetById), new { id = newTask.Id }, newTask);
         }
 
+        /// <summary>Updates a task. Marking it completed sends an email notification.</summary>
+        /// <param name="id">The task id.</param>
+        /// <param name="request">The new values for the task.</param>
+        /// <response code="400">The title is missing or categoryId does not exist.</response>
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] TaskItem updatedTask)
+        [ProducesResponseType<TaskItem>(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Update(int id, [FromBody] TaskRequest request)
         {
             var task = await _context.Tasks.FindAsync(id);
             if (task == null) return NotFound();
 
-            if (!await CategoryExists(updatedTask.CategoryId))
-                return BadRequest($"Category {updatedTask.CategoryId} does not exist.");
+            if (!await CategoryExists(request.CategoryId))
+                return BadRequest($"Category {request.CategoryId} does not exist.");
 
-            bool wasJustCompleted = !task.IsCompleted && updatedTask.IsCompleted;
+            bool wasJustCompleted = !task.IsCompleted && request.IsCompleted;
 
-            task.Title = updatedTask.Title;
-            task.Priority = updatedTask.Priority;
-            task.IsCompleted = updatedTask.IsCompleted;
-            task.CategoryId = updatedTask.CategoryId;
+            task.Title = request.Title;
+            task.Priority = request.Priority;
+            task.IsCompleted = request.IsCompleted;
+            task.CategoryId = request.CategoryId;
 
             await _context.SaveChangesAsync();
 
@@ -71,7 +96,11 @@ namespace TaskManagerApi.Controllers
             return Ok(task);
         }
 
+        /// <summary>Deletes a task.</summary>
+        /// <param name="id">The task id.</param>
         [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Delete(int id)
         {
             var task = await _context.Tasks.FindAsync(id);

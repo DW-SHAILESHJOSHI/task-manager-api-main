@@ -21,6 +21,7 @@ This project is a Task Manager API backed by SQL Server through Entity Framework
 - OOP-based notification system triggered on task completion
 - SQL Server persistence with EF Core migrations
 - Integration tests run against a real SQL Server (LocalDB) database
+- Built-in web UI for managing tasks and categories, served by the API itself
 
 ---
 
@@ -62,6 +63,7 @@ TaskManagerApi/
 │   ├── EmailReminder.cs             # Email notification implementation
 │   └── SmsReminder.cs               # SMS notification implementation
 ├── Program.cs                       # App entry point & configuration
+├── wwwroot/                         # Web UI (plain HTML/CSS/JS, no build step)
 ├── TaskManagerApi.http              # Ready-made requests for every endpoint
 └── appsettings.json                 # App configuration
 TaskManagerApi.Tests/                # Integration tests (xUnit)
@@ -159,7 +161,17 @@ dotnet ef database update   # creates the database and applies migrations
 dotnet run
 ```
 
-The API will start on `http://localhost:5179` and open Swagger UI in your browser.
+The API will start on `http://localhost:5179` and open the web UI in your browser.
+
+### Web UI
+
+`http://localhost:5179/` serves a single-page UI from `wwwroot/` that calls the API on the same origin:
+
+- Create, edit, complete and delete tasks; create, rename and delete categories
+- Sidebar views for all tasks, uncategorized tasks and each category, with live counts and progress stats
+- Search, filter by status and priority, and sort by date, priority or title
+- Light and dark themes, responsive down to phone width
+- Keyboard shortcuts: `n` for a new task, `/` to search
 
 ### Swagger UI
 

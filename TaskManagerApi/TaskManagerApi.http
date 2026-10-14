@@ -58,6 +58,15 @@ Content-Type: application/json
   "categoryId": 9999
 }
 
+### Create a task with an invalid priority (400 Bad Request; allowed: Low, Medium, High)
+POST {{TaskManagerApi_HostAddress}}/api/tasks
+Content-Type: application/json
+
+{
+  "title": "Invalid priority",
+  "priority": "banana"
+}
+
 ### Update a task / mark it completed (prints an email notification in the console)
 PUT {{TaskManagerApi_HostAddress}}/api/tasks/1
 Content-Type: application/json

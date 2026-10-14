@@ -1,3 +1,5 @@
+using TaskManagerApi.Models;
+
 namespace TaskManagerApi.Dtos
 {
     /// <summary>Body for creating or updating a task.</summary>
@@ -11,9 +13,9 @@ namespace TaskManagerApi.Dtos
         /// <example>false</example>
         public bool IsCompleted { get; set; }
 
-        /// <summary>Low, Medium or High.</summary>
+        /// <summary>Low, Medium or High. Defaults to Low.</summary>
         /// <example>High</example>
-        public string Priority { get; set; } = "Low";
+        public Priority Priority { get; set; } = Priority.Low;
 
         /// <summary>The category the task belongs to, or null for none.</summary>
         /// <example>1</example>
